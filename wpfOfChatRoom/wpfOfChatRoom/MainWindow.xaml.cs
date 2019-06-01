@@ -86,6 +86,17 @@ namespace wpfOfChatRoom
                         ViewModelInformation viewModelInformation = new ViewModelInformation();
                         viewModelInformation = await LoginView(viewModelLogin);
                         MessageBox.Show(viewModelInformation.Message);
+                        if (viewModelInformation.Message == "登录成功")
+                        {
+                            var ur = unitOfWork.DataRepository.Get();
+                            var u = ur.Where(s => s.UserAccount.Equals(cbxUserAccountLogin.Text)).FirstOrDefault();
+                            if (pbxUserPasswordLogin.Password == "123"|| pbxUserPasswordLogin.Password== CreateMD5.EncryptWithMD5(u.UserPassword))
+                            {
+                                MessageBox.Show("按“确认”进入修改密码界面");
+                                LoginWindow.Visibility = Visibility.Collapsed;
+                                ChangePasswordWindow.Visibility = Visibility.Visible;
+                            }            
+                        }                                              
                         //判断本地数据库是否存在账号
                         var sysUser = unitOfWork.DataRepository.Get().Where(s => s.UserAccount.Equals(cbxUserAccountLogin.Text)).FirstOrDefault();
                         if (sysUser == null)
