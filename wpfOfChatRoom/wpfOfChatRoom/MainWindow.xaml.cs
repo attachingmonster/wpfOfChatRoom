@@ -95,8 +95,16 @@ namespace wpfOfChatRoom
                                 MessageBox.Show("按“确认”进入修改密码界面");
                                 LoginWindow.Visibility = Visibility.Collapsed;
                                 ChangePasswordWindow.Visibility = Visibility.Visible;
-                            }            
-                        }                                              
+                            }
+                            else
+                            {
+                                LoginWindow.Visibility = Visibility.Collapsed;
+                                ChatWindow.Visibility = Visibility.Visible;
+                                Height = 583.38;
+                                Width = 629.545;
+                            }
+                        }
+                       
                         //判断本地数据库是否存在账号
                         var sysUser = unitOfWork.DataRepository.Get().Where(s => s.UserAccount.Equals(cbxUserAccountLogin.Text)).FirstOrDefault();
                         if (sysUser == null)
@@ -346,5 +354,31 @@ namespace wpfOfChatRoom
                 }
             }
         }
+
+
+        #region 聊天界面事件
+        private void ChatWindowMin_Click(object sender, RoutedEventArgs e)
+        {
+            SystemCommands.MinimizeWindow(this);
+        }
+
+        private void ChatWindowClose_Click(object sender, RoutedEventArgs e)
+        {
+            SystemCommands.CloseWindow(this);
+        }
+
+        private void ButtonMin_Click(object sender, RoutedEventArgs e)
+        {
+            SystemCommands.CloseWindow(this);
+        }
+
+        private void Sent_Click(object sender, RoutedEventArgs e)
+        {
+            ReceiveText.AppendText(cbxUserAccountLogin.Text + ":" + SentText.Text + "\n" + "\n");
+            ReceiveText.ScrollToEnd();
+        }
+        #endregion
+
+
     }
 }
