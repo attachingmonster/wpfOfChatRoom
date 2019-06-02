@@ -100,6 +100,18 @@ namespace wpfOfChatRoom
                             {
                                 LoginWindow.Visibility = Visibility.Collapsed;
                                 ChatWindow.Visibility = Visibility.Visible;
+                                //初始化聊天界面
+                                ViewModelData viewModelData = new ViewModelData();
+                                viewModelData.UserAccount = cbxUserAccountLogin.Text;
+                                viewModelData.Message = SentText.Text;
+                                var viewModelDataReturn = await DataModel(viewModelData);
+                                ReceiveText.Text = "";
+                                foreach (var v in viewModelDataReturn)
+                                {
+                                    ReceiveText.AppendText(v.UserAccount + ":" + "\n" + v.Message + "\n" + "\n");
+                                }
+                                ReceiveText.ScrollToEnd();
+
                                 Height = 583.38;
                                 Width = 629.545;
                             }
@@ -355,7 +367,6 @@ namespace wpfOfChatRoom
             }
         }
 
-
         #region 聊天界面事件
         private void ChatWindowMin_Click(object sender, RoutedEventArgs e)
         {
@@ -372,10 +383,30 @@ namespace wpfOfChatRoom
             SystemCommands.CloseWindow(this);
         }
 
-        private void Sent_Click(object sender, RoutedEventArgs e)
-        {
-            ReceiveText.AppendText(cbxUserAccountLogin.Text + ":" + SentText.Text + "\n" + "\n");
+        private async void Sent_Click(object sender, RoutedEventArgs e)
+        {           
+            //ReceiveText.AppendText(cbxUserAccountLogin.Text + ":" + "\n" + SentText.Text + "\n" + "\n");
+            //ReceiveText.ScrollToEnd();
+            ViewModelData viewModelData = new ViewModelData();
+            viewModelData.UserAccount = cbxUserAccountLogin.Text;
+            viewModelData.Message = SentText.Text;
+            var viewModelDataReturn = await DataModel(viewModelData);
+            ReceiveText.Text = "";
+            foreach (var v in viewModelDataReturn)
+            {
+                ReceiveText.AppendText(v.UserAccount+":"+"\n"+v.Message + "\n" + "\n");
+            }       
             ReceiveText.ScrollToEnd();
+        }
+
+
+        private async Task<List<ViewModelDataReturn>> DataModel(ViewModelData viewModelData)
+        {
+            //Post异步提交信息，格式为Json
+            var response = await client.PostAsJsonAsync("https://localhost:44311/api/DataModel/PostDataModel", viewModelData);
+            response.EnsureSuccessStatusCode();
+            var viewModelDataReturn = await response.Content.ReadAsAsync<List<ViewModelDataReturn>>();
+            return viewModelDataReturn;
         }
         #endregion
 
