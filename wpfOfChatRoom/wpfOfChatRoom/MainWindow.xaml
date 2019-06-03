@@ -163,7 +163,7 @@
 
 
         <!--聊天界面-->
-        <Grid Visibility="Collapsed" Name="ChatWindow">
+        <Grid Name="ChatWindow" Visibility="Collapsed">
             <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="39" Stroke="{DynamicResource {x:Static SystemColors.ActiveCaptionBrushKey}}" VerticalAlignment="Top" Width="630"/>
             <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="32" Margin="0,419,0,0" Stroke="{DynamicResource {x:Static SystemColors.ActiveCaptionBrushKey}}" VerticalAlignment="Top" Width="630"/>
             <Rectangle Fill="#FFF4F4F5" HorizontalAlignment="Left" Height="37" Margin="0,546,0,0" Stroke="{DynamicResource {x:Static SystemColors.ActiveCaptionBrushKey}}" VerticalAlignment="Top" Width="630"/>
@@ -173,6 +173,8 @@
             <Button Content="×" HorizontalAlignment="Left" Margin="585,0,0,0" VerticalAlignment="Top" Width="44" Height="39" FontSize="24" Click="ChatWindowClose_Click"/>
             <TextBox Name="ReceiveText" HorizontalAlignment="Left" Height="380" Margin="0,39,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="630" IsReadOnly="True" FontSize="18"/>
             <TextBox Name="SentText" HorizontalAlignment="Left" Height="95" Margin="0,451,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="630" FontSize="18"/>
+            <Button Content="刷新消息" HorizontalAlignment="Left" Margin="335,0,0,0" VerticalAlignment="Top" Width="92" Height="39" FontSize="20" Click="UpdateMessage_Click"/>
+            <Label Name="UserMessage" Content="" HorizontalAlignment="Left" Margin="2,2,0,0" VerticalAlignment="Top" Width="210" Height="34" FontSize="20"/>
         </Grid>
 
 

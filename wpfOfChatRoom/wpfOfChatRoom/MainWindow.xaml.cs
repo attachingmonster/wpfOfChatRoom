@@ -4,6 +4,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using System.Timers;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Data;
@@ -28,13 +29,15 @@ namespace wpfOfChatRoom
         public MainWindow()
         {
             InitializeComponent();
-            var data = unitOfWork.DataRepository.Get();
+            var data = unitOfWork.DataRepository.Get();                     
         }
-
+        
+     
         #region 成员定义
         AccountContext db = new AccountContext();//数据库上下文实例
         UnitOfWork unitOfWork = new UnitOfWork();//单元工厂实例      
         HttpClient client = new HttpClient();
+        String User;//登录的用户
         #endregion
 
         #region 登录界面事件
@@ -88,6 +91,7 @@ namespace wpfOfChatRoom
                         MessageBox.Show(viewModelInformation.Message);
                         if (viewModelInformation.Message == "登录成功")
                         {
+                            User = cbxUserAccountLogin.Text;
                             var ur = unitOfWork.DataRepository.Get();
                             var u = ur.Where(s => s.UserAccount.Equals(cbxUserAccountLogin.Text)).FirstOrDefault();
                             if (pbxUserPasswordLogin.Password == "123"|| pbxUserPasswordLogin.Password== CreateMD5.EncryptWithMD5(u.UserPassword))
@@ -100,20 +104,19 @@ namespace wpfOfChatRoom
                             {
                                 LoginWindow.Visibility = Visibility.Collapsed;
                                 ChatWindow.Visibility = Visibility.Visible;
+                                UserMessage.Content = "用户" + ":" + " " + User;
                                 //初始化聊天界面
-                                ViewModelData viewModelData = new ViewModelData();
-                                viewModelData.UserAccount = cbxUserAccountLogin.Text;
-                                viewModelData.Message = SentText.Text;
-                                var viewModelDataReturn = await DataModel(viewModelData);
+                                var viewModelDataReturn = await ViewModelData();
                                 ReceiveText.Text = "";
                                 foreach (var v in viewModelDataReturn)
-                                {
-                                    ReceiveText.AppendText(v.UserAccount + ":" + "\n" + v.Message + "\n" + "\n");
+                                {                                
+                                    ReceiveText.AppendText(v.UserAccount + ":" + "\n" + v.Message + "\n" + "\n");                                
                                 }
                                 ReceiveText.ScrollToEnd();
 
                                 Height = 583.38;
                                 Width = 629.545;
+
                             }
                         }
                        
@@ -137,12 +140,12 @@ namespace wpfOfChatRoom
                                 unitOfWork.Save();
                             }
                         }
+                       
                         var user = unitOfWork.DataRepository.Get();         //combobox的更新
                         cbxUserAccountLogin.ItemsSource = user.ToList();       //combobox数据源连接数据库
                         cbxUserAccountLogin.DisplayMemberPath = "UserAccount";  //combobox下拉显示的值
                         cbxUserAccountLogin.SelectedValuePath = "UserAccount";  //combobox选中项显示的值
                         cbxUserAccountLogin.SelectedIndex = 0;
-
                     }
                     else
                     {
@@ -383,23 +386,34 @@ namespace wpfOfChatRoom
             SystemCommands.CloseWindow(this);
         }
 
-        private async void Sent_Click(object sender, RoutedEventArgs e)
+        private async void Sent_Click(object sender, RoutedEventArgs e)//聊天界面上的发送按钮事件
         {           
             //ReceiveText.AppendText(cbxUserAccountLogin.Text + ":" + "\n" + SentText.Text + "\n" + "\n");
             //ReceiveText.ScrollToEnd();
             ViewModelData viewModelData = new ViewModelData();
-            viewModelData.UserAccount = cbxUserAccountLogin.Text;
+            viewModelData.UserAccount = User;
             viewModelData.Message = SentText.Text;
             var viewModelDataReturn = await DataModel(viewModelData);
             ReceiveText.Text = "";
             foreach (var v in viewModelDataReturn)
-            {
+            {            
                 ReceiveText.AppendText(v.UserAccount+":"+"\n"+v.Message + "\n" + "\n");
             }       
             ReceiveText.ScrollToEnd();
         }
 
+        private async void UpdateMessage_Click(object sender, RoutedEventArgs e)//聊天界面上的刷新消息按钮事件
+        {
+            var viewModelDataReturn = await ViewModelData();
+            ReceiveText.Text = "";
+            foreach (var v in viewModelDataReturn)
+            {
+                ReceiveText.AppendText(v.UserAccount + ":" + "\n" + v.Message + "\n" + "\n");
+            }
+            ReceiveText.ScrollToEnd();
+        }
 
+        //用post向webapi传递消息的同时从webapi返回消息到消息框
         private async Task<List<ViewModelDataReturn>> DataModel(ViewModelData viewModelData)
         {
             //Post异步提交信息，格式为Json
@@ -408,8 +422,17 @@ namespace wpfOfChatRoom
             var viewModelDataReturn = await response.Content.ReadAsAsync<List<ViewModelDataReturn>>();
             return viewModelDataReturn;
         }
+
+        //用get从webapi得到消息
+        public async Task<List<ViewModelDataReturn>> ViewModelData()
+        {
+            var response = await client.GetAsync("https://localhost:44311/api/DataModelReturn/GetDataModel");
+            response.EnsureSuccessStatusCode();
+            var viewModelDataReturn = await response.Content.ReadAsAsync<List<ViewModelDataReturn>>();
+            return viewModelDataReturn;
+        }
         #endregion
-
-
+     
+        
     }
 }
