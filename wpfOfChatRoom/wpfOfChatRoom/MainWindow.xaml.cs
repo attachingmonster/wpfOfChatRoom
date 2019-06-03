@@ -395,9 +395,9 @@ namespace wpfOfChatRoom
             viewModelData.Message = SentText.Text;
             var viewModelDataReturn = await DataModel(viewModelData);
             ReceiveText.Text = "";
-            foreach (var v in viewModelDataReturn)
+            foreach (var v in viewModelDataReturn)//webapi数据库里的聊天记录add到textbox里展示，今后可能会添加很多内容
             {            
-                ReceiveText.AppendText(v.UserAccount+":"+"\n"+v.Message + "\n" + "\n");
+                ReceiveText.AppendText(v.UserAccount+":"+"\n"+v.Message + "\n" + "\n");//
             }       
             ReceiveText.ScrollToEnd();
         }
@@ -406,7 +406,7 @@ namespace wpfOfChatRoom
         {
             var viewModelDataReturn = await ViewModelData();
             ReceiveText.Text = "";
-            foreach (var v in viewModelDataReturn)
+            foreach (var v in viewModelDataReturn)//webapi数据库里的聊天记录add到textbox里展示，今后可能会添加很多内容
             {
                 ReceiveText.AppendText(v.UserAccount + ":" + "\n" + v.Message + "\n" + "\n");
             }

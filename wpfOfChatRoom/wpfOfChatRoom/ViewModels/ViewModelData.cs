@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace wpfOfChatRoom.ViewModels
 {
+    /// <summary>
+    /// 聊天记录，post到webapi；；这里的命名最好能够联系上这个意思
+    /// </summary>
     public class ViewModelData
     {
         /// <summary>

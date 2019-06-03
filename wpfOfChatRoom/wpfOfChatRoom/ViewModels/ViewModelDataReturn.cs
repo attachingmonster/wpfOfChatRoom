@@ -6,7 +6,10 @@ using System.Threading.Tasks;
 
 namespace wpfOfChatRoom.ViewModels
 {
-    public  class ViewModelDataReturn
+    /// <summary>
+    /// 聊天记录，来自webapi；；这里的命名最好能够联系上这个意思
+    /// </summary>
+    public class ViewModelDataReturn
     {
         /// <summary>
         /// 用户账号
