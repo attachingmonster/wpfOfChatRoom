@@ -60,6 +60,11 @@ namespace wpfOfChatRoom
             }
         }
 
+        private void comboBoxTextChanged(object sender, System.Windows.Controls.TextChangedEventArgs e)//登录界面上combobox的值改变事件
+        {
+            pbxUserPasswordLogin.Password = "";
+        }
+
         private void loginChangePwd_Click(object sender, RoutedEventArgs e)//登录界面的修改密码按钮事件
         {
             LoginWindow.Visibility = Visibility.Collapsed;
@@ -92,9 +97,31 @@ namespace wpfOfChatRoom
                         if (viewModelInformation.Message == "登录成功")
                         {
                             User = cbxUserAccountLogin.Text;
+
+                            //判断本地数据库是否存在账号
+                            var sysUser = unitOfWork.DataRepository.Get().Where(s => s.UserAccount.Equals(cbxUserAccountLogin.Text)).FirstOrDefault();
+                            if (sysUser == null)
+                            {
+                                var CurrentData = new Data();
+                                CurrentData.UserAccount = cbxUserAccountLogin.Text;
+                                CurrentData.UserPassword = CreateMD5.EncryptWithMD5(pbxUserPasswordLogin.Password);
+                                CurrentData.RememberPassword = viewModelLogin.RememberPassword;
+                                unitOfWork.DataRepository.Insert(CurrentData);    //增加新SysUser
+                                unitOfWork.Save();
+                            }
+                            else
+                            {
+                                var users = unitOfWork.DataRepository.Get().Where(s => s.UserAccount.Equals(cbxUserAccountLogin.Text)).FirstOrDefault();
+                                if (users != null)
+                                {
+                                    users.RememberPassword = viewModelLogin.RememberPassword;
+                                    unitOfWork.Save();
+                                }
+                            }
+
                             var ur = unitOfWork.DataRepository.Get();
-                            var u = ur.Where(s => s.UserAccount.Equals(cbxUserAccountLogin.Text)).FirstOrDefault();
-                            if (pbxUserPasswordLogin.Password == "123"|| pbxUserPasswordLogin.Password== CreateMD5.EncryptWithMD5(u.UserPassword))
+                            var u = ur.Where(s => s.UserAccount.Equals(cbxUserAccountLogin.Text)).FirstOrDefault();                          
+                            if (pbxUserPasswordLogin.Password == "123" || pbxUserPasswordLogin.Password == CreateMD5.EncryptWithMD5("123")|| pbxUserPasswordLogin.Password == CreateMD5.EncryptWithMD5(CreateMD5.EncryptWithMD5("123")))
                             {
                                 MessageBox.Show("按“确认”进入修改密码界面");
                                 LoginWindow.Visibility = Visibility.Collapsed;
@@ -104,42 +131,23 @@ namespace wpfOfChatRoom
                             {
                                 LoginWindow.Visibility = Visibility.Collapsed;
                                 ChatWindow.Visibility = Visibility.Visible;
-                                UserMessage.Content = "用户" + ":" + " " + User;
-                                //初始化聊天界面
-                                var viewModelDataReturn = await ViewModelData();
-                                ReceiveText.Text = "";
-                                foreach (var v in viewModelDataReturn)
-                                {                                
-                                    ReceiveText.AppendText(v.UserAccount + ":" + "\n" + v.Message + "\n" + "\n");                                
-                                }
-                                ReceiveText.ScrollToEnd();
-
+                                UserMessage.Content = User;
                                 Height = 583.38;
                                 Width = 629.545;
-
+                                //初始化聊天界面
+                                ViewModel viewModel = new ViewModel();
+                                viewModel.Message = "1";//给个固定可以传到webapi的参数
+                                var viewModelDataReturn = await DataModelReturn(viewModel);
+                                ReceiveText.Text = "";
+                                foreach (var v in viewModelDataReturn)
+                                {
+                                    ReceiveText.AppendText(v.UserAccount + ":" + "\n" + v.Message + "\n" + "\n");
+                                }
+                                ReceiveText.ScrollToEnd();
                             }
                         }
                        
-                        //判断本地数据库是否存在账号
-                        var sysUser = unitOfWork.DataRepository.Get().Where(s => s.UserAccount.Equals(cbxUserAccountLogin.Text)).FirstOrDefault();
-                        if (sysUser == null)
-                        {                        
-                            var CurrentData = new Data();
-                            CurrentData.UserAccount = cbxUserAccountLogin.Text;
-                            CurrentData.UserPassword = CreateMD5.EncryptWithMD5(pbxUserPasswordLogin.Password);
-                            CurrentData.RememberPassword = viewModelLogin.RememberPassword;
-                            unitOfWork.DataRepository.Insert(CurrentData);    //增加新SysUser
-                            unitOfWork.Save();
-                        }
-                        else
-                        {
-                            var users = unitOfWork.DataRepository.Get().Where(s => s.UserAccount.Equals(cbxUserAccountLogin.Text)).FirstOrDefault();
-                            if (users != null)
-                            {
-                                users.RememberPassword = viewModelLogin.RememberPassword;
-                                unitOfWork.Save();
-                            }
-                        }
+                       
                        
                         var user = unitOfWork.DataRepository.Get();         //combobox的更新
                         cbxUserAccountLogin.ItemsSource = user.ToList();       //combobox数据源连接数据库
@@ -159,7 +167,7 @@ namespace wpfOfChatRoom
             }
             catch (Exception ex)
             {
-                MessageBox.Show("登录失败！错误信息：\n" + ex.Message);
+                MessageBox.Show("登录失败！错误信息：\n" + ex.Message+"网络错误");
             }
         }
 
@@ -174,8 +182,13 @@ namespace wpfOfChatRoom
             try
             {
                 //Post异步提交信息，格式为Json
+                /*
                 var response = await client.PostAsJsonAsync("https://localhost:44311/api/Login/PostLogin", viewModelLogin);
                 response.EnsureSuccessStatusCode();
+                */
+                var response = await client.PostAsJsonAsync("http://www.jajazz.club/api/Login/PostLogin", viewModelLogin);
+                response.EnsureSuccessStatusCode();
+                
                 viewModelInformation = await response.Content.ReadAsAsync<ViewModelInformation>();
                 if (viewModelInformation == null)
                 {
@@ -218,6 +231,12 @@ namespace wpfOfChatRoom
         #region 修改密码界面事件
         private async void ChangePsw_Click(object sender, RoutedEventArgs e)//修改密码事件
         {
+            if (tbxOldPasswordChangePwd.Visibility != Visibility.Collapsed)    //如果显示密码按钮事件开始，则让显示密码值赋值给隐藏密码的值
+            {
+                pbxOldPasswordChangePwd.Password = tbxOldPasswordChangePwd.Text;
+                pbxUserPasswordChangePwd.Password = tbxUserPasswordChangePwd.Text;
+                pbxSurePasswordChangePwd.Password = tbxSurePasswordChangePwd.Text;
+            }
             try
             {
                 if (tbxUserAccountChangePwd.Text != "")
@@ -260,6 +279,29 @@ namespace wpfOfChatRoom
                                         ViewModelInformation viewModelInformation = new ViewModelInformation();
                                         viewModelInformation = await ChangePswView(viewModelChangePsw);
                                         MessageBox.Show(viewModelInformation.Message);
+                                        if(viewModelInformation.Message== "修改成功！")
+                                        {
+                                            //返回登录界面
+                                            ChangePasswordWindow.Visibility = Visibility.Collapsed;
+                                            LoginWindow.Visibility = Visibility.Visible;                                         
+
+                                            //更新本地数据库
+                                            var user = unitOfWork.DataRepository.Get();
+                                            var u = user.Where(s => s.UserAccount.Equals(tbxUserAccountChangePwd.Text)).FirstOrDefault();
+                                            if(u!=null)
+                                            {
+                                                u.UserPassword = CreateMD5.EncryptWithMD5(pbxUserPasswordChangePwd.Password);
+                                                unitOfWork.Save();
+                                            }
+
+                                            tbxUserAccountChangePwd.Text = "";
+                                            pbxOldPasswordChangePwd.Password = "";
+                                            pbxUserPasswordChangePwd.Password = "";
+                                            pbxSurePasswordChangePwd.Password = "";
+                                            tbxOldPasswordChangePwd.Text = "";
+                                            tbxUserPasswordChangePwd.Text = "";
+                                            tbxSurePasswordChangePwd.Text = "";
+                                        }
                                     }
                                     else
                                     {
@@ -295,10 +337,41 @@ namespace wpfOfChatRoom
             }
             catch (Exception ex)
             {
-                MessageBox.Show("修改密码失败！错误信息：\n" + ex.Message);
+                MessageBox.Show("修改密码失败！错误信息：\n" + ex.Message+"网络错误");
             }
 
         }
+
+        private void ShowChangePassword_Check(object sender, RoutedEventArgs e)//修改密码界面中显示密码事件
+        {
+            tbxOldPasswordChangePwd.Visibility = Visibility.Visible;
+            pbxOldPasswordChangePwd.Visibility = Visibility.Collapsed;
+            tbxOldPasswordChangePwd.Text = pbxOldPasswordChangePwd.Password;
+
+            tbxUserPasswordChangePwd.Visibility = Visibility.Visible;
+            pbxUserPasswordChangePwd.Visibility = Visibility.Collapsed;
+            tbxUserPasswordChangePwd.Text = pbxUserPasswordChangePwd.Password;
+
+            tbxSurePasswordChangePwd.Visibility = Visibility.Visible;
+            pbxSurePasswordChangePwd.Visibility = Visibility.Collapsed;
+            tbxSurePasswordChangePwd.Text = pbxSurePasswordChangePwd.Password;
+        }
+
+        private void HiddenChangePassword_Check(object sender, RoutedEventArgs e)//修改密码界面中隐藏密码事件
+        {
+            tbxOldPasswordChangePwd.Visibility = Visibility.Collapsed;
+            pbxOldPasswordChangePwd.Visibility = Visibility.Visible;
+            pbxOldPasswordChangePwd.Password = tbxOldPasswordChangePwd.Text;
+
+            tbxUserPasswordChangePwd.Visibility = Visibility.Collapsed;
+            pbxUserPasswordChangePwd.Visibility = Visibility.Visible;
+            pbxUserPasswordChangePwd.Password = tbxUserPasswordChangePwd.Text;
+
+            tbxSurePasswordChangePwd.Visibility = Visibility.Collapsed;
+            pbxSurePasswordChangePwd.Visibility = Visibility.Visible;
+            pbxSurePasswordChangePwd.Password = tbxSurePasswordChangePwd.Text;
+        }
+
 
         private void changePwdBack_click(object sender, RoutedEventArgs e)//修改密码界面的返回事件
         {
@@ -317,8 +390,13 @@ namespace wpfOfChatRoom
             try
             {
                 //Post异步提交信息，格式为Json
+                /*
                 var response = await client.PostAsJsonAsync("https://localhost:44311/api/ChangePsw/PostChangePsw", viewModelChangePsw);
                 response.EnsureSuccessStatusCode();
+                */
+                var response = await client.PostAsJsonAsync("http://www.jajazz.club/api/ChangePsw/PostChangePsw", viewModelChangePsw);
+                response.EnsureSuccessStatusCode();
+                
                 viewModelInformation = await response.Content.ReadAsAsync<ViewModelInformation>();
                 if (viewModelInformation == null)
                 {
@@ -359,6 +437,7 @@ namespace wpfOfChatRoom
                     if (sysUser.RememberPassword == "1")
                     {
                         pbxUserPasswordLogin.Password = CreateMD5.EncryptWithMD5(sysUser.UserPassword);//给passwordbox一串固定密码
+                        //pbxUserPasswordLogin.Password = CreateMD5.EncryptWithMD5("12345");//给passwordbox一串固定密码
                         cheRememberPwdLogin.IsChecked = true;
                     }
                     else
@@ -404,35 +483,67 @@ namespace wpfOfChatRoom
 
         private async void UpdateMessage_Click(object sender, RoutedEventArgs e)//聊天界面上的刷新消息按钮事件
         {
-            var viewModelDataReturn = await ViewModelData();
+            ViewModel viewModel = new ViewModel();
+            viewModel.Message = "1";//给个固定可以传到webapi的参数
+            var viewModelDataReturn = await DataModelReturn(viewModel);
             ReceiveText.Text = "";
             foreach (var v in viewModelDataReturn)
             {
                 ReceiveText.AppendText(v.UserAccount + ":" + "\n" + v.Message + "\n" + "\n");
             }
-            ReceiveText.ScrollToEnd();
+            ReceiveText.ScrollToEnd();          
         }
 
         //用post向webapi传递消息的同时从webapi返回消息到消息框
         private async Task<List<ViewModelDataReturn>> DataModel(ViewModelData viewModelData)
         {
             //Post异步提交信息，格式为Json
+            /*
             var response = await client.PostAsJsonAsync("https://localhost:44311/api/DataModel/PostDataModel", viewModelData);
             response.EnsureSuccessStatusCode();
+            */
+            
+            var response = await client.PostAsJsonAsync("http://www.jajazz.club/api/DataModel/PostDataModel", viewModelData);
+            response.EnsureSuccessStatusCode();
+           
             var viewModelDataReturn = await response.Content.ReadAsAsync<List<ViewModelDataReturn>>();
             return viewModelDataReturn;
         }
-
+        
         //用get从webapi得到消息
+        /*
         public async Task<List<ViewModelDataReturn>> ViewModelData()
         {
             var response = await client.GetAsync("https://localhost:44311/api/DataModelReturn/GetDataModel");
             response.EnsureSuccessStatusCode();
+            
+            var response = await client.GetAsync("http://www.jajazz.club/api/DataModelReturn/GetDataModel");
+            response.EnsureSuccessStatusCode();
+            
             var viewModelDataReturn = await response.Content.ReadAsAsync<List<ViewModelDataReturn>>();
             return viewModelDataReturn;
         }
+       */
+        //用post从webapi得到用户聊天的数据
+        private async Task<List<ViewModelDataReturn>> DataModelReturn(ViewModel viewModel)
+        {
+            //Post异步提交信息，格式为Json
+            /*
+           var response = await client.PostAsJsonAsync("https://localhost:44311/api/DataModelReturn/PostDataModelReturn", viewModel);
+           response.EnsureSuccessStatusCode();
+           */
+           
+            var response = await client.PostAsJsonAsync("http://www.jajazz.club/api/DataModelReturn/PostDataModelReturn", viewModel);
+            response.EnsureSuccessStatusCode();
+          
+            var viewModelDataReturn = await response.Content.ReadAsAsync<List<ViewModelDataReturn>>();
+            return viewModelDataReturn;
+        }
+
         #endregion
-     
+
         
+        
+
     }
 }
