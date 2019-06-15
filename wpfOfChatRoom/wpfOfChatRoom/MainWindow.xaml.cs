@@ -185,8 +185,12 @@ namespace wpfOfChatRoom
                 /*
                 var response = await client.PostAsJsonAsync("https://localhost:44311/api/Login/PostLogin", viewModelLogin);
                 response.EnsureSuccessStatusCode();
+                
+
+                var response = await client.PostAsJsonAsync("http://212.64.121.213/api/Login/PostLogin", viewModelLogin);
+                response.EnsureSuccessStatusCode();
                 */
-                var response = await client.PostAsJsonAsync("http://www.jajazz.club/api/Login/PostLogin", viewModelLogin);
+                var response = await client.PostAsJsonAsync("http://www.kakazz.cn/api/Login/PostLogin", viewModelLogin);
                 response.EnsureSuccessStatusCode();
                 
                 viewModelInformation = await response.Content.ReadAsAsync<ViewModelInformation>();
@@ -394,9 +398,9 @@ namespace wpfOfChatRoom
                 var response = await client.PostAsJsonAsync("https://localhost:44311/api/ChangePsw/PostChangePsw", viewModelChangePsw);
                 response.EnsureSuccessStatusCode();
                 */
-                var response = await client.PostAsJsonAsync("http://www.jajazz.club/api/ChangePsw/PostChangePsw", viewModelChangePsw);
+                var response = await client.PostAsJsonAsync("http://www.kakazz.cn/api/ChangePsw/PostChangePsw", viewModelChangePsw);
                 response.EnsureSuccessStatusCode();
-                
+                             
                 viewModelInformation = await response.Content.ReadAsAsync<ViewModelInformation>();
                 if (viewModelInformation == null)
                 {
@@ -503,7 +507,7 @@ namespace wpfOfChatRoom
             response.EnsureSuccessStatusCode();
             */
             
-            var response = await client.PostAsJsonAsync("http://www.jajazz.club/api/DataModel/PostDataModel", viewModelData);
+            var response = await client.PostAsJsonAsync("http://www.kakazz.cn/api/DataModel/PostDataModel", viewModelData);
             response.EnsureSuccessStatusCode();
            
             var viewModelDataReturn = await response.Content.ReadAsAsync<List<ViewModelDataReturn>>();
@@ -527,13 +531,8 @@ namespace wpfOfChatRoom
         //用post从webapi得到用户聊天的数据
         private async Task<List<ViewModelDataReturn>> DataModelReturn(ViewModel viewModel)
         {
-            //Post异步提交信息，格式为Json
-            /*
-           var response = await client.PostAsJsonAsync("https://localhost:44311/api/DataModelReturn/PostDataModelReturn", viewModel);
-           response.EnsureSuccessStatusCode();
-           */
-           
-            var response = await client.PostAsJsonAsync("http://www.jajazz.club/api/DataModelReturn/PostDataModelReturn", viewModel);
+            //Post异步提交信息，格式为Json                
+            var response = await client.PostAsJsonAsync("http://www.kakazz.cn/api/DataModelReturn/PostDataModelReturn", viewModel);
             response.EnsureSuccessStatusCode();
           
             var viewModelDataReturn = await response.Content.ReadAsAsync<List<ViewModelDataReturn>>();
